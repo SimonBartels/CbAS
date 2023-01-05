@@ -40,6 +40,8 @@ def neg_log_likelihood(y_true, y_pred):
     y_true = y_true[:, 0]
     mean = y_pred[:, 0]
     variance = K.softplus(y_pred[:, 1]) + 1e-6
+    # TODO: Why use the second index? What's it supposed to be?
+    #variance = K.softplus(y_pred[:, 0]) + 1e-6
     log_variance = K.log(variance)
     return 0.5 * K.mean(log_variance, axis = -1) + 0.5 * K.mean(K.square(y_true - mean) / variance, axis = -1) + 0.5 * K.log(2 * np.pi)
 

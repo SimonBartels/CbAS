@@ -43,7 +43,12 @@ def build_pred_model(n_tokens=4, seq_length=33, enc1_units=50):
     x = Input(shape=(seq_length, n_tokens))
     h = Flatten()(x)
     h = Dense(enc1_units, activation='elu')(h)
-    out = Dense(1)(h)
+    #out = Dense(1)(h)
+    # Simon: Changed this to two to predict a variance.
+    # Based on original code:
+    # https://github.com/dhbrookes/CbAS/blob/676b549855f6dd7aef7576055a94f8e797c4996b/gfp_conditioning.ipynb
+    # see build_model function
+    out = Dense(2)(h)
 
     model = Model(inputs=[x], outputs=[out])
     return model
