@@ -118,7 +118,7 @@ def train_experimental_pred_vaes():
         pred_vae.vae_.save_weights("../models/pred_vae_vae_weights%s.h5" % suffix)
         
         
-def run_experimental_weighted_ml(it, f, X_train, y_train, repeats=3):
+def run_experimental_weighted_ml(it, ground_truth, X_train, y_train, repeats=3, parallel_function_evaluations=100):
     """Runs the GFP comparative tests on the weighted ML models and FBVAE."""
     
     assert it in [0, 1, 2]
@@ -142,14 +142,6 @@ def run_experimental_weighted_ml(it, f, X_train, y_train, repeats=3):
     vae_0.encoder_.load_weights("../models/vae_0_encoder_weights%s.h5" % vae_suffix)
     vae_0.decoder_.load_weights("../models/vae_0_decoder_weights%s.h5"% vae_suffix)
     vae_0.vae_.load_weights("../models/vae_0_vae_weights%s.h5"% vae_suffix)
-
-    class BlackBoxWrapper:
-        def predict(self, X, print_every):
-            y = f(X)
-            #print("f(x): " + str(y))
-            return y
-    ground_truth = BlackBoxWrapper()
-
     
     loss = losses.neg_log_likelihood
     keras.utils.get_custom_objects().update({"neg_log_likelihood": loss})
@@ -163,7 +155,7 @@ def run_experimental_weighted_ml(it, f, X_train, y_train, repeats=3):
         'homoscedastic': False,
         'homo_y_var': 0.01,
         'train_gt_evals':gt_train,
-        'samples':100,
+        'samples': parallel_function_evaluations,
         'cutoff':1e-6,
         'it_epochs':10,
         'verbose':True,
@@ -208,21 +200,38 @@ def run_experimental_weighted_ml(it, f, X_train, y_train, repeats=3):
 if __name__ == "__main__":
     os.chdir(os.path.dirname(__file__))
     ### Run weighted ML and FBVAE ###
-    info, f, X_train, y_train, run_info, terminate = objective_factory.create("white_noise", caller_info={"ALGORITHM": "CBAS"})
+    # pretrain VAEs and oracles on original GFP dataset
+    if False:
+        X_train, y_train, gt_train = util.get_experimental_X_y(random_state=0, train_size=5000)
+        #X_train = X_train[:20, :, :]
+        #y_train = y_train[:20]
+        train_experimental_vaes(X_train)
+        train_experimental_oracles(X_train, y_train, it=0)
+
+    info, f, X_train, y_train, run_info, terminate = objective_factory.create("./poli_elbo_objective.sh",
+                                                                              caller_info={"ALGORITHM": "CBAS"})
+    print(y_train)
+    #terminate()
+    #exit()
     b = np.zeros([X_train.shape[0], X_train.shape[1], len(info.get_alphabet())], dtype=np.int)
     idx = np.arange(X_train.shape[1])
     for i in range(X_train.shape[0]):
         b[i, idx, X_train[i, :]] = 1
     X_train = b
-    y_train = y_train.flatten()
-    #X_train, y_train, gt_train = util.get_experimental_X_y(random_state=0, train_size=5000)
-    #X_train = X_train[:20, :, :]
-    #y_train = y_train[:20]
-    train_experimental_vaes(X_train)
-    train_experimental_oracles(X_train, y_train, it=0)
+    y_train = -y_train.flatten()  # need to change sign because CBaS is maximizing
+
+    class BlackBoxWrapper:
+        def predict(self, X, print_every):
+            y = -f(X)  # need to change sign since CBaS is maximizing
+            #print("f(x): " + str(y))
+            return y
+    ground_truth = BlackBoxWrapper()
+
     repeats = 1 #3
     its = [0] #[0, 1, 2]
+    parallel_function_evaluations = 1 #100
     for it in its:
         # the variable it determines the number of used models: 1, 5, 20
-        run_experimental_weighted_ml(it, f, X_train, y_train, repeats=repeats)
+        run_experimental_weighted_ml(it, ground_truth, X_train, y_train, repeats=repeats, parallel_function_evaluations=parallel_function_evaluations)
         break
+    terminate()

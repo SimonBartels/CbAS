@@ -1,4 +1,2 @@
 [DEFAULT]
-observer = poli.logger.observers.rudimentary_observer.RudimentaryObserver
-logger = poli.logger.dummy_logger.DummyLogger
-#logger = poli.logger.wandb.wandb_logger.WandBLogger
+observer = /home/simon/stuff/projects/bayesian_optimization/prot_bo/prot-bo-1/instantiate_observer.sh
