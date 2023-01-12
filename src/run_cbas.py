@@ -118,7 +118,7 @@ def train_experimental_pred_vaes():
         pred_vae.vae_.save_weights("../models/pred_vae_vae_weights%s.h5" % suffix)
         
         
-def run_experimental_weighted_ml(it, ground_truth, X_train, y_train, repeats=3, parallel_function_evaluations=100):
+def run_experimental_weighted_ml(it, ground_truth, X_train, y_train, repeats=3, parallel_function_evaluations=100, black_box_evaluations=50):
     """Runs the GFP comparative tests on the weighted ML models and FBVAE."""
     
     assert it in [0, 1, 2]
@@ -161,7 +161,7 @@ def run_experimental_weighted_ml(it, ground_truth, X_train, y_train, repeats=3, 
         'verbose':True,
         'LD': 20,
         'enc1_units':50,
-        'iters': 50
+        'iters': black_box_evaluations,
     }
     
     if num_models==1:
@@ -208,7 +208,7 @@ if __name__ == "__main__":
         train_experimental_vaes(X_train)
         train_experimental_oracles(X_train, y_train, it=0)
 
-    info, f, X_train, y_train, run_info, terminate = objective_factory.create("./poli_elbo_objective.sh",
+    info, f, X_train, y_train, run_info, terminate = objective_factory.create("GFP_FOLDX",
                                                                               caller_info={"ALGORITHM": "CBAS"})
     print(y_train)
     #terminate()
@@ -230,8 +230,9 @@ if __name__ == "__main__":
     repeats = 1 #3
     its = [0] #[0, 1, 2]
     parallel_function_evaluations = 1 #100
+    black_box_evaluations = 20  #parallel_function_evaluations * 50
     for it in its:
         # the variable it determines the number of used models: 1, 5, 20
-        run_experimental_weighted_ml(it, ground_truth, X_train, y_train, repeats=repeats, parallel_function_evaluations=parallel_function_evaluations)
+        run_experimental_weighted_ml(it, ground_truth, X_train, y_train, repeats=repeats, parallel_function_evaluations=parallel_function_evaluations, black_box_evaluations=black_box_evaluations)
         break
     terminate()

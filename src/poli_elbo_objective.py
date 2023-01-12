@@ -1,12 +1,13 @@
 __author__ = 'Simon Bartels'
 
 import os
+import sys
 import warnings
 import tensorflow as tf
 import numpy as np
 
-from poli.core.AbstractBlackBox import BlackBox
-from poli.core.AbstractProblemFactory import AbstractProblemFactory
+from poli.core.abstract_black_box import AbstractBlackBox
+from poli.core.abstract_problem_factory import AbstractProblemFactory
 from poli.core.problem_setup_information import ProblemSetupInformation
 from util import get_experimental_X_y, AA_IDX, build_vae, one_hot_encode_aa
 
@@ -15,7 +16,7 @@ class CBASVAEProblemFactory(AbstractProblemFactory):
     def get_setup_information(self) -> ProblemSetupInformation:
         return ProblemSetupInformation("CBAS_VAE", max_sequence_length=237, aligned=True, alphabet=AA_IDX)
 
-    def create(self):
+    def create(self, seed: int = 0):
         X_train, _, _ = get_experimental_X_y(random_state=0, train_size=5000)
         x0 = X_train[:10, :, :]
         x0 = np.argmax(x0, axis=-1)
@@ -39,8 +40,8 @@ class CBASVAEProblemFactory(AbstractProblemFactory):
 
         vae = vae_0
 
-        class CBASVAEProblem(BlackBox):
-            def _black_box(self, x):
+        class CBASVAEProblem(AbstractBlackBox):
+            def _black_box(self, x, context=None):
                 # TODO: permute?
                 #x1h = tf.one_hot(x, AA)  #.flatten(start_dim=1).double()
                 #x_ = tf.flatten(tf.permute(tf.reshape(x1h, [x.shape[0], L, AA]), [0, 2, 1]),
@@ -58,6 +59,12 @@ class CBASVAEProblemFactory(AbstractProblemFactory):
 
 
 if __name__ == '__main__':
+    # without arguments this call is meant to register the problem
+    # if len(sys.argv) == 1:
+    #     print(os.path.dirname(__file__))
+    #     poli.core.registry.register_problem(CBASVAEProblemFactory().get_setup_information().get_problem_name(),
+    #                                         os.path.join(os.path.dirname(__file__), "poli_elbo_objective.sh"))
+    #     exit()
     from poli.objective import run
     #from run_single_bo_conf import __file__ as new_cwd
     #os.chdir(os.path.dirname(new_cwd))
