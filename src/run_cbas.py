@@ -20,7 +20,6 @@ import optimization_algs
 
 from poli import objective_factory
 
-from src.util import one_hot_encode_aa
 
 """
 This module contains the code to run the tests of optimization
@@ -198,7 +197,7 @@ def run_experimental_weighted_ml(it, ground_truth, X_train, y_train, repeats=3, 
 
             
 if __name__ == "__main__":
-    os.chdir(os.path.dirname(__file__))
+    #os.chdir(os.path.dirname(__file__))
     ### Run weighted ML and FBVAE ###
     # pretrain VAEs and oracles on original GFP dataset
     if False:
@@ -208,31 +207,33 @@ if __name__ == "__main__":
         train_experimental_vaes(X_train)
         train_experimental_oracles(X_train, y_train, it=0)
 
-    info, f, X_train, y_train, run_info, terminate = objective_factory.create("GFP_FOLDX",
-                                                                              caller_info={"ALGORITHM": "CBAS"})
-    print(y_train)
-    #terminate()
-    #exit()
-    b = np.zeros([X_train.shape[0], X_train.shape[1], len(info.get_alphabet())], dtype=np.int)
-    idx = np.arange(X_train.shape[1])
-    for i in range(X_train.shape[0]):
-        b[i, idx, X_train[i, :]] = 1
-    X_train = b
-    y_train = -y_train.flatten()  # need to change sign because CBaS is maximizing
+    for seed in range(1, 2):
+        info, f, X_train, y_train, run_info = objective_factory.create("FLUORESCENCE", seed=seed,
+                                                                       caller_info={"ALGORITHM": "CBAS"})
+        print(y_train)
+        #terminate()
+        #exit()
+        b = np.zeros([X_train.shape[0], X_train.shape[1], len(info.get_alphabet())], dtype=np.int)
+        idx = np.arange(X_train.shape[1])
+        for i in range(X_train.shape[0]):
+            b[i, idx, X_train[i, :]] = 1
+        X_train = b
+        y_train = -y_train.flatten()  # need to change sign because CBaS is maximizing
 
-    class BlackBoxWrapper:
-        def predict(self, X, print_every):
-            y = -f(X)  # need to change sign since CBaS is maximizing
-            #print("f(x): " + str(y))
-            return y
-    ground_truth = BlackBoxWrapper()
+        class BlackBoxWrapper:
+            def predict(self, X, print_every):
+                y = -f(X)  # need to change sign since CBaS is maximizing
+                #print("f(x): " + str(y))
+                return y
+        ground_truth = BlackBoxWrapper()
 
-    repeats = 1 #3
-    its = [0] #[0, 1, 2]
-    parallel_function_evaluations = 1 #100
-    black_box_evaluations = 20  #parallel_function_evaluations * 50
-    for it in its:
-        # the variable it determines the number of used models: 1, 5, 20
-        run_experimental_weighted_ml(it, ground_truth, X_train, y_train, repeats=repeats, parallel_function_evaluations=parallel_function_evaluations, black_box_evaluations=black_box_evaluations)
-        break
-    terminate()
+        repeats = 1 #3
+        its = [0] #[0, 1, 2]
+        parallel_function_evaluations = 1 #100
+        black_box_evaluations = 5  #parallel_function_evaluations * 50
+        for it in its:
+            # the variable it determines the number of used models: 1, 5, 20
+            run_experimental_weighted_ml(it, ground_truth, X_train, y_train, repeats=repeats, parallel_function_evaluations=parallel_function_evaluations, black_box_evaluations=black_box_evaluations)
+            f.terminate()
+            break
+
