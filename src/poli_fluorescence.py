@@ -28,8 +28,9 @@ class FluorescenceFactory(AbstractProblemFactory):
         #x0 = torch.as_tensor(one_hot_encode_aa(get_gfp_base_seq()))
         warnings.warn("Wild-type given as DNA sequence!")
         #x0 = torch.as_tensor(one_hot_encode_aa(convert_idx_array_to_aas(gp.X_[:1, :])[0]), dtype=torch.float64).reshape(-1, 1).T
-        x0 = gp.X_[:1, :]
-        assert(x0.shape[0] == 1 and len(x0.shape) == 2)
+        x0 = gp.X_[:3, :]
+        assert(x0.shape[1] == self.get_setup_information().get_max_sequence_length())
+        #assert(x0.shape[0] == 1 and len(x0.shape) == 2)
         f = FluorescenceProblem(self.get_setup_information().get_max_sequence_length())
         return f, x0, f(x0)
 
