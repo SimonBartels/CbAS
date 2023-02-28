@@ -1,20 +1,10 @@
-import os
-import warnings
-#warnings.filterwarnings("ignore")
+import sys
+
 import numpy as np
 from tensorflow import keras
-from tensorflow.keras import callbacks
-# from tensorflow.keras.utils import generic_utils
-from tensorflow.keras import models
-# import keras.callbacks
-# import keras.utils.generic_utils
-# import keras.models
 import json
-from tensorflow.python.keras import backend as K
-import tensorflow as tf
 
 import util
-import gfp_gp
 import losses
 import optimization_algs
 
@@ -207,8 +197,8 @@ if __name__ == "__main__":
         train_experimental_vaes(X_train)
         train_experimental_oracles(X_train, y_train, it=0)
 
-    for seed in range(1, 2):
-        info, f, X_train, y_train, run_info = objective_factory.create("FLUORESCENCE", seed=seed,
+    for seed in range(1):
+        info, f, X_train, y_train, run_info = objective_factory.create(sys.argv[1], seed=seed,
                                                                        caller_info={"ALGORITHM": "CBAS"})
         print(y_train)
         #terminate()
@@ -230,7 +220,7 @@ if __name__ == "__main__":
         repeats = 1 #3
         its = [0] #[0, 1, 2]
         parallel_function_evaluations = 1 #100
-        black_box_evaluations = 5  #parallel_function_evaluations * 50
+        black_box_evaluations = 64  #parallel_function_evaluations * 50
         for it in its:
             # the variable it determines the number of used models: 1, 5, 20
             run_experimental_weighted_ml(it, ground_truth, X_train, y_train, repeats=repeats, parallel_function_evaluations=parallel_function_evaluations, black_box_evaluations=black_box_evaluations)
