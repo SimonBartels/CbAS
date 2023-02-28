@@ -1,11 +1,8 @@
 __author__ = 'Simon Bartels'
 
 import os
-import sys
-import warnings
-import tensorflow as tf
 import numpy as np
-
+import poli.core.registry
 from poli.core.abstract_black_box import AbstractBlackBox
 from poli.core.abstract_problem_factory import AbstractProblemFactory
 from poli.core.problem_setup_information import ProblemSetupInformation
@@ -17,14 +14,16 @@ class CBASVAEProblemFactory(AbstractProblemFactory):
         return ProblemSetupInformation("CBAS_VAE", max_sequence_length=237, aligned=True, alphabet=AA_IDX)
 
     def create(self, seed: int = 0):
-        X_train, _, _ = get_experimental_X_y(random_state=0, train_size=5000)
+        X_train, _, _ = get_experimental_X_y(random_state=seed, train_size=5000)
         x0 = X_train[:10, :, :]
+        # convert one-hot sequences to index format
         x0 = np.argmax(x0, axis=-1)
 
         info = self.get_setup_information()
         AA = len(info.get_alphabet())
         L = info.get_max_sequence_length()
 
+        # the objective function does NOT change, it stays the same VAE
         RANDOM_STATE = 1
         train_size_str = "5k"
         vae_suffix = '_%s_%i' % (train_size_str, RANDOM_STATE)
@@ -59,14 +58,8 @@ class CBASVAEProblemFactory(AbstractProblemFactory):
 
 
 if __name__ == '__main__':
-    # without arguments this call is meant to register the problem
-    # if len(sys.argv) == 1:
-    #     print(os.path.dirname(__file__))
-    #     poli.core.registry.register_problem(CBASVAEProblemFactory().get_setup_information().get_problem_name(),
-    #                                         os.path.join(os.path.dirname(__file__), "poli_elbo_objective.sh"))
-    #     exit()
-    from poli.objective import run
-    #from run_single_bo_conf import __file__ as new_cwd
-    #os.chdir(os.path.dirname(new_cwd))
+    poli.core.registry.register_problem(CBASVAEProblemFactory(), "../env")
+    from poli.objective_factory import create
+    info, f, x, y, _ = create(CBASVAEProblemFactory().get_setup_information().get_problem_name(), observer=None)
+    print(f(x))
     problem_factory_name = os.path.basename(__file__)[:-2] + CBASVAEProblemFactory.__name__
-    run(problem_factory_name)
