@@ -197,7 +197,8 @@ if __name__ == "__main__":
         train_experimental_vaes(X_train)
         train_experimental_oracles(X_train, y_train, it=0)
 
-    for seed in range(1):
+    if True:
+        seed = int(sys.argv[2])
         info, f, X_train, y_train, run_info = objective_factory.create(sys.argv[1], seed=seed,
                                                                        caller_info={"ALGORITHM": "CBAS"})
         print(y_train)
