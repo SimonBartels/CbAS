@@ -38,3 +38,6 @@ class FluorescenceFactory(AbstractProblemFactory):
 if __name__ == '__main__':
     from poli.core.registry import register_problem
     register_problem(FluorescenceFactory(), "../env")
+    from poli.objective_factory import create
+    info, f, x, y, _ = create(FluorescenceFactory().get_setup_information().get_problem_name(), observer=None)
+    print(f(x))
