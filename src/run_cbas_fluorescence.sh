@@ -3,5 +3,6 @@
 # SBATCH --time=0-01:00:00
 CONDA_BASE=$(conda info --base)
 source $CONDA_BASE/etc/profile.d/conda.sh
+conda activate ../env
 #export PYTHONPATH  # why is this necessary?
 python run_cbas.py FLUORESCENCE $SLURM_ARRAY_TASK_ID
