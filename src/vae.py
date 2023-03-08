@@ -14,6 +14,8 @@ Module for extendable variational autoencoders.
 Some code adapted from Louis Tiao's blog: http://louistiao.me/
 """
 
+# added by Simon
+MAKE_DETERMINISTIC = True
 
 class KLDivergenceLayer(Layer):
     """ Add KL divergence in latent layer to loss """
@@ -134,9 +136,12 @@ class BaseVAE(object):
         # get standard deviation from log variance:
         sigma_z = Lambda(lambda lv: K.exp(0.5 * lv))(log_var_z)
 
-        # re-parametrization trick ( z = mu_z + eps * sigma_z)
-        eps = Input(tensor=K.random_normal(stddev=epsilon_std,
-                                           shape=(K.shape(mu_z)[0], self.latentDim_)))
+        if MAKE_DETERMINISTIC:
+            eps = Input(tensor=K.zeros_like(mu_z))
+        else:
+            # re-parametrization trick ( z = mu_z + eps * sigma_z)
+            eps = Input(tensor=K.random_normal(stddev=epsilon_std,
+                                               shape=(K.shape(mu_z)[0], self.latentDim_)))
 
         eps_z = Multiply()([sigma_z, eps])  # scale by epsilon sample
         z = Add()([mu_z, eps_z])
