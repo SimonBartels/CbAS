@@ -15,7 +15,7 @@ class CBASVAEProblemFactory(AbstractProblemFactory):
 
     def create(self, seed: int = 0):
         X_train, _, _ = get_experimental_X_y(random_state=seed, train_size=5000)
-        x0 = X_train[:10, :, :]
+        x0 = X_train[:3, :, :]
         # convert one-hot sequences to index format
         x0 = np.argmax(x0, axis=-1)
 
